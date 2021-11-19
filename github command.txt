@@ -1,0 +1,5 @@
+git add -A               	#將檔案的修改上傳到暫存區
+git commit -m '說明'      	#提交到本地倉庫
+git push origin master   	#推送到GitHub網站上
+git push -f origin master   #強制推送到GitHub網站上
+gh auth login 				#透過驗證登入GitHub  

@@ -1,17 +1,151 @@
-<html>
-  <head>
-    <script>
-      let HOST = location.origin.replace(/^http/, 'ws')
-      let ws = new WebSocket(HOST);
-      let el;
+<!DOCTYPE html>
+<meta charset="utf-8">
+<html id="main_html">
+	<title>
+		Test Title
+	</title>
+	<head>
+		<script src="https://code.jquery.com/jquery-3.5.0.js"></script>
+		<script src="Date.js"></script>
+		<script src="html.js"></script>
+		<script src="Event.js"></script>
+	</head>
+	<body id="main_body">
+		<button onclick="showAllEvent()">check</button>
+		<p>
+			<div align="center" style='width:75%;height:3%;margin-left: auto;margin-right: 0;style="display: table; vertical-align: middle"'>
+				<form id="time_form" onsubmit='eventArray.insertEvent();return drawEvent();'>
+					Title: <input id="title_text" type="text" placeholder="Title" value="" ></input>
+					Description: <input id="desc_text" type="text" placeholder="Description" value=''></input>
+					Room: <select id="room_id">
+							<option value="1">Room 1</option>
+							<option value="2">Room 2</option>
+							<option value="3">Room 3</option>
+							<option value="4">Room 4</option>
+							<option value="5">Room 5</option>
+						  </select>
+					Start Time: <input id="start_time" type="time" min="08:00" max="20:59" value="08:00"></input>
+					End Time: <input id="end_time" type="time" min="08:01" max="21:00" value="09:00"></input>
+					Color: <input id="event_color" type="color" value="#00FFFF"></input>
+					<input type="submit" value="Insert"></input>
+				</form>
+			</div>
+		</p>
+		<p>
+			<div align="center" style='width:75%;height:3%;margin-left: auto;margin-right: 0;style="display: table; vertical-align: middle"'>
+				
+					<button id="prev_one_day_button" onclick="changeToPrevDate()" style="width:25%;height:100%;border:0px transparent none;background-color:transparent;">
+						<img src="LeftArrowButton.jpg" style="width:auto%;height:100%">
+					</button>
+					
+					<label id="date_text" align="center" valign="middle" style="font-size:2.71vh;">
+					</label>
 
-      ws.onmessage = (event) => {
-        el = document.getElementById('server-time');
-        el.innerHTML = 'Server time: ' + event.data;
-      };
-    </script>
-  </head>
-  <body>
-    <p id="server-time"></p>
-  </body>
+					<button id="next_one_day_button" onclick="changeToNextDate()" style="width:25%;height:100%;border:0px transparent none;background-color:transparent;">
+						<img src="RightArrowButton.jpg" style="width:auto;height:100%">
+					</button>
+			</div>
+		</p>
+		<p>
+			<div id="table_div" style='width:75%;height:70%;margin-left: auto;margin-right: 0;style="display: table; vertical-align: middle"'>
+				
+			</div>
+		</p>
+	</body>
+	
+	<script type="text/javascript">
+		var eventArray = [];
+		function len(str){ 
+			return str.replace(/[^\x00-\xff]/g,"xx").length;
+		}
+		
+		
+		
+		var currentTime = new Date();
+		var selectTime = new Date();
+		currentTime.init();
+		selectTime.init();
+		updateOneDayButton();
+		var mainBody = document.getElementById("main_body");
+		var mainHtml = document.getElementById("main_html");
+		mainHtml.style.height = "100vh"
+		mainHtml.style.width = "100vw"
+		mainBody.style.height = "98vh"
+		mainBody.style.width = "98vw"
+		mainBody.style.margin = "0px"
+		document.getElementById("table_div").appendChild(createTable("Day_Table",14,6));
+		
+		for(var i=2;i<14;i++){
+			for(var j=1;j<6;j++){
+				document.getElementById("Day_Table_tr"+i+"_td"+j).remove();
+			}
+		}
+		
+		for(var i=1;i<6;i++){
+			document.getElementById("Day_Table_tr"+0+"_th"+i).width = "17%";
+			document.getElementById("Day_Table_tr"+1+"_td"+i).rowSpan = "13";
+			document.getElementById("Day_Table_tr"+1+"_td"+i).style.border = "1px solid black";
+			document.getElementById("Day_Table_tr"+1+"_td"+i).align = "left";
+			document.getElementById("Day_Table_tr"+1+"_td"+i).style.position = "relative";
+			//document.getElementById("Day_Table_tr"+1+"_td"+i).appendChild(createDiv("Day_Table_Div_"+i));
+			$("#"+"Day_Table_tr"+1+"_td"+i).attr("valign","top");
+			//draw("Day_Table_Canvas_"+i);
+		}
+		
+		document.getElementById("Day_Table_tr"+0+"_th"+0).style.width = "15%";
+		for(var i=1;i<14;i++) {
+			setTableText("Day_Table",(7+i)+":00~"+(7+i+1)+":00",i,0);
+			document.getElementById("Day_Table_tr"+i+"_td"+0).style.width = "15%";
+			document.getElementById("Day_Table_tr"+i+"_td"+0).style.border = "1px solid black";
+		}
+		for(var i=1;i<6;i++) {
+			setTableText("Day_Table", "Room "+i,0,i);
+			document.getElementById("Day_Table_tr"+0+"_th"+i).style.border = "1px solid black";
+		}
+		setTableText("Day_Table", "",0,0);
+		document.getElementById("Day_Table_tr"+0+"_th"+0).style.border = "1px solid black";
+		setDateText();
+		
+		function setDateText() {
+			setTextByID('date_text',selectTime.year+"年"+selectTime.month+"月"+selectTime.date+"日("+selectTime.weekday+")");
+		};
+		function updateOneDayButton() {
+			if(selectTime.toDateString() == currentTime.toDateString())
+			{
+				document.getElementById('prev_one_day_button').style.visibility = "hidden";
+			}
+			else
+			{
+				document.getElementById('prev_one_day_button').style.visibility = "visible";
+			}
+			var nextTwoWeekTime = new Date();
+			nextTwoWeekTime.nextDays(14);
+			if(selectTime.toDateString() == nextTwoWeekTime.toDateString())
+			{
+				document.getElementById("next_one_day_button").style.visibility = "hidden";
+			}
+			else
+			{
+				document.getElementById("next_one_day_button").style.visibility = "visible";
+			}
+		};
+		
+		function changeToPrevDate() {
+			if(selectTime.prevDays(1)){
+				setDateText();
+			}
+			updateOneDayButton();
+			drawEvent();
+		};
+		
+		function changeToNextDate() {
+			if(selectTime.nextDays(1)){
+				setDateText();
+			}
+			updateOneDayButton();
+			drawEvent();
+		};
+
+	</script>
+	
 </html>
